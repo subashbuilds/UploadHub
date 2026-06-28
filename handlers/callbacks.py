@@ -1,16 +1,17 @@
 import os
+
 from pyrogram import Client
 from pyrogram.types import CallbackQuery
-from downloaders.direct import download_direct_file
+
 from tasks import tasks
 from downloaders.telegram import download_telegram_file
+from downloaders.direct import download_direct_file
 from uploaders.pixeldrain import upload_to_pixeldrain
+
 
 @Client.on_callback_query()
 async def callback_handler(client: Client, callback: CallbackQuery):
-    data = callback.data
-
-    destination, task_id = data.split("|")
+    destination, task_id = callback.data.split("|")
 
     task = tasks.get(task_id)
 
@@ -26,6 +27,7 @@ async def callback_handler(client: Client, callback: CallbackQuery):
         f"⏳ Preparing upload to **{destination.title()}**..."
     )
 
+    # Download
     if (
         message.document
         or message.video
@@ -38,38 +40,28 @@ async def callback_handler(client: Client, callback: CallbackQuery):
             message,
             callback.message
         )
-
-        await callback.message.edit_text(
-            f"✅ Download complete!\n\n`{file_path}`"
-        )
     else:
         file_path = await download_direct_file(
-        message.text,
-        callback.message
-    )
-
-    await callback.message.edit_text(
-    "⬆️ Uploading to PixelDrain..."
-    )
+            message.text,
+            callback.message
+        )
 
     try:
-        await callback.message.edit_text("⬆️ Uploading to PixelDrain...")
+        await callback.message.edit_text(
+            "⬆️ Uploading to PixelDrain..."
+        )
 
         url = await upload_to_pixeldrain(file_path)
 
         await callback.message.edit_text(
             f"✅ Upload Complete!\n\n🔗 {url}"
-    )
+        )
 
     except Exception as e:
         await callback.message.edit_text(
             f"❌ Upload failed\n\n`{e}`"
-    )
+        )
 
     finally:
         if os.path.exists(file_path):
-           os.remove(file_path)
-           
-    await callback.message.edit_text(
-        f"✅ Upload Complete!\n\n🔗 {url}"
-    )
+            os.remove(file_path)

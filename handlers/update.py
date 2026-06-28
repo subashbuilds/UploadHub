@@ -1,3 +1,4 @@
+print("✅ update.py loaded")
 import asyncio
 import os
 import sys
@@ -10,7 +11,13 @@ from config import SUDO_USERS
 
 @Client.on_message(filters.command("update"))
 async def update_handler(client: Client, message: Message):
-
+    
+    
+    print("Update command received:", message.text)
+    print("User ID:", message.from_user.id)
+    print("SUDO_USERS:", SUDO_USERS)
+    
+    
     if message.from_user.id not in SUDO_USERS:
         return
 

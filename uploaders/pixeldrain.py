@@ -5,10 +5,6 @@ from config import PIXELDRAIN_API_KEY
 
 
 async def upload_to_pixeldrain(file_path: str):
-    """
-    Upload a file to PixelDrain using your API key.
-    Returns the public download URL.
-    """
 
     url = "https://pixeldrain.com/api/file"
 

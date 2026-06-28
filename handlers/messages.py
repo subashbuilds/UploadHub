@@ -1,6 +1,7 @@
 import re
 from tasks import create_task
 from utils.helpers import human_size
+from utils.url_info import get_url_info
 
 from pyrogram import Client, filters
 from pyrogram.types import (
@@ -42,8 +43,7 @@ async def message_handler(client: Client, message: Message):
 
     # Direct Link
     elif message.text and URL_PATTERN.match(message.text):
-        file_name = message.text.split("/")[-1] or "Unknown File"
-        file_size = "Unknown"
+        file_name, file_size = await get_url_info(message.text)
         input_type = "url"
 
     else:

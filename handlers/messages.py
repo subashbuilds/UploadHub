@@ -3,8 +3,6 @@ from core.tasks import create_task
 from utils.helpers import human_size
 from utils.url_info import get_url_info
 
-from core.cancel_tasks import create_cancel_task
-
 from pyrogram import Client, filters
 from pyrogram.types import (
     Message,
@@ -53,8 +51,6 @@ async def message_handler(client: Client, message: Message):
         return
     
     task_id = create_task(message)
-    
-    create_cancel_task(task_id)
 
     keyboard = InlineKeyboardMarkup(
     [

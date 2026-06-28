@@ -3,9 +3,10 @@ from uploaders.gofile import upload_to_gofile
 from pyrogram import Client
 from pyrogram.types import CallbackQuery
 
-from core.cancel_tasks import (
+from core.tasks import (
+    get_task,
     cancel_task,
-    remove_cancel_task,
+    remove_task,
 )
 
 from core.tasks import tasks
@@ -26,15 +27,14 @@ async def callback_handler(client: Client, callback: CallbackQuery):
             "❌ Cancelled."
         )
 
-        tasks.pop(task_id, None)
-        remove_cancel_task(task_id)
+        remove_task(task_id)
 
         return
 
     destination = action
 
 
-    task = tasks.get(task_id)
+    task = get_task(task_id)
 
     if not task:
         await callback.answer("Task expired!", show_alert=True)
@@ -95,8 +95,7 @@ async def callback_handler(client: Client, callback: CallbackQuery):
 
     finally:
 
-        tasks.pop(task_id, None)
-        remove_cancel_task(task_id)
+        remove_task(task_id)
 
         if os.path.exists(file_path):
             os.remove(file_path)

@@ -26,9 +26,11 @@ async def upload_to_gofile(file_path: str):
             async with session.post(url, data=form) as response:
 
                 text = await response.text()
+                
+                print(headers)
 
                 print("Status:", response.status)
-                print("Response:", text)
+                print("Body:", text)
 
                 try:
                     data = await response.json(content_type=None)

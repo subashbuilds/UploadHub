@@ -1,48 +1,32 @@
-import aiohttp
 import os
-
-from aiohttp import MultipartWriter
+import aiohttp
 
 from config import PIXELDRAIN_API_KEY
-from utils.upload_stream import UploadStream
 
 
-async def upload_to_pixeldrain(file_path):
+async def upload_to_pixeldrain(file_path: str):
+
+    url = "https://pixeldrain.com/api/file"
 
     auth = aiohttp.BasicAuth(
         login="",
         password=PIXELDRAIN_API_KEY
     )
 
-    stream = UploadStream(
-        file_path,
-        status_message,
-        task_id,
-        keyboard
-    )
+    form = aiohttp.FormData()
 
-    writer = MultipartWriter("form-data")
+    with open(file_path, "rb") as file:
 
-    part = writer.append(stream)
+        form.add_field(
+            "file",
+            file,
+            filename=os.path.basename(file_path),
+            content_type="application/octet-stream",
+        )
 
-    part.set_content_disposition(
-        "form-data",
-        name="file",
-        filename=os.path.basename(file_path)
-    )
+        async with aiohttp.ClientSession(auth=auth) as session:
 
-    part.headers["Content-Type"] = "application/octet-stream"
-
-    try:
-
-        async with aiohttp.ClientSession(
-            auth=auth
-        ) as session:
-
-            async with session.post(
-                "https://pixeldrain.com/api/file",
-                data=writer
-            ) as response:
+            async with session.post(url, data=form) as response:
 
                 text = await response.text()
 
@@ -53,16 +37,9 @@ async def upload_to_pixeldrain(file_path):
 
                 data = await response.json()
 
-    finally:
-
-        stream.close()
-
     if not data.get("success", True):
         raise Exception(
-            data.get(
-                "message",
-                "Upload failed"
-            )
+            data.get("message", "Upload failed")
         )
 
     return f"https://pixeldrain.com/u/{data['id']}"

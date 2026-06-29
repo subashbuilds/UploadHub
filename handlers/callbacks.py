@@ -84,43 +84,73 @@ async def callback_handler(client: Client, callback: CallbackQuery):
             cancel_keyboard
         )
 
-    try:
-        if destination == "pixeldrain":
-            await callback.message.edit_text(
-                "⬆️ Uploading to PixelDrain...",
-                reply_markup=cancel_keyboard
-            )
-            url = await upload_to_pixeldrain(file_path)
+file_path = None
 
-        elif destination == "gofile":
-            await callback.message.edit_text(
-                "⬆️ Uploading to GoFile...",
-                reply_markup=cancel_keyboard
+try:
+
+    # Download
+    if (
+        message.document
+        or message.video
+        or message.audio
+        or message.photo
+        or message.animation
+        or message.voice
+    ):
+        file_path = await download_telegram_file(
+            message,
+            callback.message,
+            task_id
         )
-            url = await upload_to_gofile(file_path)
+    else:
+        file_path = await download_direct_file(
+            message.text,
+            callback.message,
+            task_id,
+            cancel_keyboard
+        )
 
-        else:
-            raise Exception("Unknown upload destination.")
+    # Upload
+    if destination == "pixeldrain":
 
         await callback.message.edit_text(
-            f"✅ Upload Complete!\n\n🔗 {url}"
+            "⬆️ Uploading to PixelDrain...",
+            reply_markup=cancel_keyboard
+        )
+
+        url = await upload_to_pixeldrain(file_path)
+
+    elif destination == "gofile":
+
+        await callback.message.edit_text(
+            "⬆️ Uploading to GoFile...",
+            reply_markup=cancel_keyboard
+        )
+
+        url = await upload_to_gofile(file_path)
+
+    else:
+        raise Exception("Unknown upload destination.")
+
+    await callback.message.edit_text(
+        f"✅ Upload Complete!\n\n🔗 {url}"
     )
 
-    except asyncio.CancelledError:
+except asyncio.CancelledError:
 
-        await callback.message.edit_text(
-            "❌ Operation cancelled."
-        )
+    await callback.message.edit_text(
+        "❌ Operation cancelled."
+    )
 
-    except Exception as e:
+except Exception as e:
 
-        await callback.message.edit_text(
-            f"❌ Upload failed\n\n`{e}`"
-        )
+    await callback.message.edit_text(
+        f"❌ Upload failed\n\n`{e}`"
+    )
 
-    finally:
+finally:
 
-        remove_task(task_id)
+    remove_task(task_id)
 
-        if os.path.exists(file_path):
-            os.remove(file_path)
+    if file_path and os.path.exists(file_path):
+        os.remove(file_path)

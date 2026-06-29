@@ -1,47 +1,31 @@
 import os
 import aiohttp
 
-from aiohttp import MultipartWriter
-
 from config import GOFILE_API_TOKEN
-from utils.upload_stream import UploadStream
 
 
-async def upload_to_gofile(file_path):
+async def upload_to_gofile(file_path: str):
+
+    url = "https://upload.gofile.io/uploadfile"
 
     headers = {
         "Authorization": f"Bearer {GOFILE_API_TOKEN}"
     }
 
-    stream = UploadStream(
-        file_path,
-        status_message,
-        task_id,
-        keyboard
-    )
+    form = aiohttp.FormData()
 
-    writer = MultipartWriter("form-data")
+    with open(file_path, "rb") as file:
 
-    part = writer.append(stream)
+        form.add_field(
+            "file",
+            file,
+            filename=os.path.basename(file_path),
+            content_type="application/octet-stream"
+        )
 
-    part.set_content_disposition(
-        "form-data",
-        name="file",
-        filename=os.path.basename(file_path)
-    )
+        async with aiohttp.ClientSession(headers=headers) as session:
 
-    part.headers["Content-Type"] = "application/octet-stream"
-
-    try:
-
-        async with aiohttp.ClientSession(
-            headers=headers
-        ) as session:
-
-            async with session.post(
-                "https://upload.gofile.io/uploadfile",
-                data=writer
-            ) as response:
+            async with session.post(url, data=form) as response:
 
                 text = await response.text()
 
@@ -59,10 +43,6 @@ async def upload_to_gofile(file_path):
                             f"HTTP {response.status}"
                         )
                     )
-
-    finally:
-
-        stream.close()
 
     if data.get("status") != "ok":
         raise Exception(

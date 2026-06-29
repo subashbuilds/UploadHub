@@ -86,7 +86,8 @@ async def callback_handler(client: Client, callback: CallbackQuery):
             file_path = await download_telegram_file(
                 message,
                 callback.message,
-                task_id
+                task_id,
+                cancel_keyboard
             )
 
         # Direct URL
